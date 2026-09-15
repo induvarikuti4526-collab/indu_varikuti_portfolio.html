@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Indu Varikuti — Creative Developer, Full Stack Developer, Game Developer and UI/UX Designer.">
+<meta name="keywords" content="Indu Varikuti, Creative Developer, Full Stack Developer, Game Developer, UI UX, Python, JavaScript">
+<meta property="og:title" content="Indu Varikuti | Creative Developer">
+<meta property="og:description" content="Interactive 3D portfolio of Indu Varikuti.">
+<meta name="theme-color" content="#070a12">
+<title>Indu Varikuti | Creative Developer</title>
+<style>
+:root{
+  --bg:#050711;--panel:rgba(14,18,32,.68);--line:rgba(255,255,255,.12);
+  --text:#f5f7ff;--muted:#9aa5bd;--accent:#72f6d3;--accent2:#7b8cff;
+  --shadow:0 25px 80px rgba(0,0,0,.45);--radius:24px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+#canvas{position:fixed;inset:0;width:100%;height:100%;z-index:-3}
+.noise{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:70px 70px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+.loader{position:fixed;inset:0;z-index:100;background:#050711;display:grid;place-items:center;transition:.8s ease}
+.loader.hide{opacity:0;visibility:hidden}
+.loader-inner{text-align:center}
+.loader-mark{width:70px;height:70px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;margin:auto;position:relative}
+.loader-mark:after{content:"";position:absolute;inset:-7px;border:2px solid transparent;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+.loader-name{margin-top:22px;letter-spacing:.35em;font-weight:700;font-size:14px}
+.progress{width:180px;height:2px;background:var(--line);margin:16px auto;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);animation:load 1.5s ease forwards}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes load{from{width:0}to{width:100%}}
+nav{position:fixed;top:20px;left:50%;transform:translateX(-50%);width:min(1120px,calc(100% - 32px));padding:12px 16px;z-index:50;border:1px solid var(--line);background:rgba(5,7,17,.62);backdrop-filter:blur(18px);border-radius:18px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+.logo{font-weight:900;letter-spacing:.08em}.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:22px;list-style:none;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.08em}
+.nav-links a{transition:.25s}.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.menu{display:none;border:0;background:transparent;color:var(--text);font-size:24px}
+main{width:min(1180px,calc(100% - 36px));margin:auto}
+.hero{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:30px;padding-top:90px}
+.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.25em;margin-bottom:20px}
+h1{font-size:clamp(52px,9vw,112px);line-height:.87;letter-spacing:-.07em}
+.gradient{background:linear-gradient(110deg,#fff 20%,var(--accent) 55%,#8b96ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h2{font-size:clamp(20px,3vw,34px);margin:25px 0 14px;letter-spacing:-.03em}
+.hero p{max-width:650px;color:var(--muted);line-height:1.8;font-size:16px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.btn{padding:14px 19px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);font-weight:800;font-size:12px;letter-spacing:.08em;transition:.3s;display:inline-flex;align-items:center;gap:9px}
+.btn.primary{background:var(--accent);color:#06100d;border-color:var(--accent)}
+.btn:hover{transform:translateY(-4px);box-shadow:0 14px 35px rgba(0,0,0,.3)}
+.scene{height:560px;display:grid;place-items:center;perspective:1000px}
+.core{width:300px;height:300px;border-radius:50%;position:relative;transform-style:preserve-3d;transition:transform .15s}
+.core .sphere{position:absolute;inset:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--accent) 9%,#263e59 30%,#11182b 65%,transparent 67%);box-shadow:0 0 45px rgba(114,246,211,.5),0 0 140px rgba(123,140,255,.24);animation:pulse 4s ease-in-out infinite}
+.ring{position:absolute;inset:15px;border:1px solid rgba(114,246,211,.55);border-radius:50%;transform:rotateX(67deg) rotateZ(15deg);animation:spin 10s linear infinite}
+.ring.r2{inset:-5px;border-color:rgba(123,140,255,.5);transform:rotateY(68deg) rotateZ(-20deg);animation-duration:14s;animation-direction:reverse}
+.ring.r3{inset:45px;border-style:dashed;transform:rotateX(70deg) rotateY(25deg);animation-duration:7s}
+.orbit{position:absolute;inset:-45px;border:1px solid rgba(255,255,255,.08);border-radius:50%;transform:rotateX(70deg);animation:spin 18s linear infinite}
+.tag{position:absolute;padding:9px 12px;border:1px solid var(--line);background:rgba(8,11,22,.8);backdrop-filter:blur(10px);border-radius:10px;font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--muted);box-shadow:var(--shadow);animation:float 4s ease-in-out infinite}
+.tag.t1{top:5%;right:4%}.tag.t2{bottom:8%;left:0;animation-delay:-1s}.tag.t3{top:45%;right:-7%;animation-delay:-2s}
+@keyframes pulse{50%{transform:scale(1.06)}}@keyframes float{50%{transform:translateY(-10px)}}
+section{padding:110px 0;position:relative}
+.section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:38px}
+.kicker{font-size:11px;color:var(--accent);letter-spacing:.2em;font-weight:900;margin-bottom:10px}
+h3{font-size:clamp(32px,5vw,58px);letter-spacing:-.05em}
+.section-head p{max-width:450px;color:var(--muted);line-height:1.7}
+.card{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(18px);border-radius:var(--radius);box-shadow:var(--shadow)}
+.about-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+.about-card{padding:34px;min-height:300px}
+.about-card p{color:var(--muted);line-height:1.9;font-size:16px}
+.about-card strong{color:var(--text)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{padding:24px;display:flex;flex-direction:column;justify-content:end;min-height:140px}
+.stat b{font-size:30px;color:var(--accent)}.stat span{color:var(--muted);font-size:12px;margin-top:5px}
+.skills{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.skill{padding:25px;min-height:180px;transform-style:preserve-3d;transition:transform .2s, border-color .2s}
+.skill:hover{border-color:rgba(114,246,211,.5)}
+.skill .icon{font-size:25px;margin-bottom:25px}.skill h4{font-size:17px;margin-bottom:12px}.skill p{color:var(--muted);font-size:13px;line-height:1.7}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.chip{font-size:10px;border:1px solid var(--line);padding:6px 8px;border-radius:99px;color:var(--muted)}
+.projects{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.project{padding:0;overflow:hidden;min-height:390px;position:relative;transform-style:preserve-3d}
+.project-visual{height:190px;background:radial-gradient(circle at 50% 50%,rgba(114,246,211,.2),transparent 50%),linear-gradient(135deg,#11182a,#070912);display:grid;place-items:center;position:relative;overflow:hidden}
+.project-visual:before{content:"";position:absolute;width:220px;height:220px;border:1px solid rgba(255,255,255,.1);border-radius:50%;animation:spin 12s linear infinite}
+.project-visual:after{content:"";position:absolute;width:120px;height:120px;border:1px dashed rgba(114,246,211,.45);border-radius:50%;animation:spin 7s linear infinite reverse}
+.project-symbol{font-size:48px;z-index:1;filter:drop-shadow(0 0 18px rgba(114,246,211,.5))}
+.project-body{padding:25px}.project-body h4{font-size:21px;margin-bottom:9px}.project-body p{color:var(--muted);font-size:13px;line-height:1.7}.project-body .actions{margin-top:18px}
+.timeline{position:relative;max-width:850px;margin:auto}.timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:1px;background:var(--line)}
+.event{position:relative;padding:0 0 35px 45px}.dot{position:absolute;left:6px;top:7px;width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 20px rgba(114,246,211,.6)}
+.event-card{padding:24px}.event-card small{color:var(--accent);font-weight:800;letter-spacing:.12em}.event-card h4{font-size:20px;margin:8px 0}.event-card p{color:var(--muted);line-height:1.7}
+.game{padding:35px;min-height:420px;overflow:hidden;position:relative}
+.game-ui{border:1px solid var(--line);border-radius:18px;padding:25px;min-height:345px;background:linear-gradient(135deg,rgba(114,246,211,.06),rgba(123,140,255,.05));position:relative}
+.hud{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.14em}
+.arena{height:260px;display:grid;place-items:center;position:relative}
+.target{width:100px;height:100px;border:1px solid var(--accent);border-radius:50%;display:grid;place-items:center;position:relative;box-shadow:0 0 35px rgba(114,246,211,.15);transition:.2s}
+.target:before,.target:after{content:"";position:absolute;border:1px solid rgba(114,246,211,.3);border-radius:50%}
+.target:before{inset:17px}.target:after{inset:35px}
+.target.hit{transform:scale(1.25);box-shadow:0 0 60px rgba(114,246,211,.7)}
+.score{color:var(--accent);font-weight:900;font-size:18px}
+.contact-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px}
+.contact-card{padding:30px}.contact-list{display:grid;gap:13px;margin-top:25px}.contact-item{padding:15px;border:1px solid var(--line);border-radius:13px;color:var(--muted)}.contact-item b{display:block;color:var(--text);font-size:11px;letter-spacing:.12em;margin-bottom:5px}
+form{display:grid;gap:12px}input,textarea{width:100%;padding:15px;border:1px solid var(--line);background:rgba(0,0,0,.18);border-radius:12px;color:var(--text);outline:0}input:focus,textarea:focus{border-color:var(--accent)}textarea{min-height:150px;resize:vertical}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:12px}
+.footer-inner{width:min(1180px,calc(100% - 36px));margin:auto;display:flex;justify-content:space-between;gap:15px}
+.reveal{opacity:0;transform:translateY(35px);transition:opacity .8s ease,transform .8s ease}.reveal.show{opacity:1;transform:none}
+.cursor{position:fixed;width:18px;height:18px;border:1px solid var(--accent);border-radius:50%;pointer-events:none;z-index:90;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .2s,height .2s}
+@media(max-width:850px){
+  nav{top:10px}.menu{display:block}.nav-links{display:none;position:absolute;top:60px;left:0;right:0;padding:15px;flex-direction:column;background:rgba(5,7,17,.95);border:1px solid var(--line);border-radius:14px}.nav-links.open{display:flex}
+  .hero{grid-template-columns:1fr;padding-top:120px}.scene{height:430px;order:-1}.core{transform:scale(.8)}
+  .about-grid,.contact-grid{grid-template-columns:1fr}.skills{grid-template-columns:1fr 1fr}.projects{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:15px}
+}
+@media(max-width:520px){
+  main{width:min(100% - 24px,1180px)}section{padding:80px 0}h1{font-size:58px}.scene{height:330px}.core{transform:scale(.62)}.tag.t3{right:-15%}
+  .skills{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.about-card,.game,.contact-card{padding:22px}.footer-inner{width:calc(100% - 24px);flex-direction:column}
+  .cursor{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="loader" id="loader"><div class="loader-inner"><div class="loader-mark">IV</div><div class="loader-name">INDU VARIKUTI</div><div class="progress"><span></span></div></div></div>
+<canvas id="canvas"></canvas><div class="grid-bg"></div><div class="noise"></div><div class="cursor" id="cursor"></div>
+
+<nav>
+  <a class="logo" href="#home">IV<span>.</span></a>
+  <button class="menu" id="menu" aria-label="Open menu">☰</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#home">HOME</a></li><li><a href="#about">ABOUT</a></li><li><a href="#skills">SKILLS</a></li>
+    <li><a href="#projects">PROJECTS</a></li><li><a href="#experience">EXPERIENCE</a></li><li><a href="#education">EDUCATION</a></li><li><a href="#contact">CONTACT</a></li>
+  </ul>
+</nav>
+
+<main>
+<section class="hero" id="home">
+  <div class="hero-copy reveal">
+    <div class="eyebrow">CREATIVE DIGITAL IDENTITY / 2026</div>
+    <h1>INDU<br><span class="gradient">VARIKUTI</span></h1>
+    <h2>Creative Developer</h2>
+    <p>Full Stack Developer • Game Developer • UI/UX Designer. A dedicated and adaptable learner with a proactive attitude, strong work ethic and an interest in creating interactive digital experiences.</p>
+    <div class="actions"><a class="btn primary" href="#projects">EXPLORE MY WORK ↗</a><a class="btn" href="#contact">CONTACT ME →</a></div>
+  </div>
+  <div class="scene reveal" id="scene">
+    <div class="core" id="core"><div class="sphere"></div><div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="orbit"></div>
+      <div class="tag t1">FULL STACK</div><div class="tag t2">GAME DEV</div><div class="tag t3">UI / UX</div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-head reveal"><div><div class="kicker">01 / PROFILE</div><h3>Built to learn.<br><span class="gradient">Designed to create.</span></h3></div><p>A clean digital representation of the profile information available in the resume, expanded with practical project interests.</p></div>
+  <div class="about-grid">
+    <div class="card about-card reveal"><p>I am a <strong>dedicated and adaptable professional</strong> with a proactive attitude and the ability to learn quickly. I value strong work ethics, effective communication and continuous improvement. My portfolio focuses on the intersection of <strong>web development, creative interaction, game development and UI/UX design.</strong></p><div class="chips"><span class="chip">QUICK LEARNER</span><span class="chip">PROBLEM SOLVING</span><span class="chip">CREATIVE</span><span class="chip">TEAM ORIENTED</span></div></div>
+    <div class="stats"><div class="card stat reveal"><b>01</b><span>PROFILE</span></div><div class="card stat reveal"><b>04</b><span>FEATURED PROJECT IDEAS</span></div><div class="card stat reveal"><b>3D</b><span>INTERACTIVE DIRECTION</span></div><div class="card stat reveal"><b>∞</b><span>LEARNING MINDSET</span></div></div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="section-head reveal"><div><div class="kicker">02 / TOOLKIT</div><h3>Skills & <span class="gradient">interests.</span></h3></div><p>Presented as areas of capability and interest rather than inflated expertise.</p></div>
+  <div class="skills">
+    <div class="card skill tilt reveal"><div class="icon">⌘</div><h4>Frontend</h4><p>Building responsive and interactive interfaces.</p><div class="chips"><span class="chip">HTML</span><span class="chip">CSS</span><span class="chip">JavaScript</span></div></div>
+    <div class="card skill tilt reveal"><div class="icon">⌬</div><h4>Programming</h4><p>Exploring programming and computer-vision projects.</p><div class="chips"><span class="chip">Python</span><span class="chip">OpenCV</span><span class="chip">MediaPipe</span></div></div>
+    <div class="card skill tilt reveal"><div class="icon">◈</div><h4>Creative Development</h4><p>Combining design thinking with interactive technology.</p><div class="chips"><span class="chip">UI/UX</span><span class="chip">3D WEB</span><span class="chip">GAME DEV</span></div></div>
+    <div class="card skill tilt reveal"><div class="icon">◎</div><h4>Professional</h4><p>Transferable strengths useful in academic and practical work.</p><div class="chips"><span class="chip">DATA ENTRY</span><span class="chip">COMMUNICATION</span><span class="chip">QUICK LEARNING</span></div></div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="section-head reveal"><div><div class="kicker">03 / SELECTED WORK</div><h3>Projects in <span class="gradient">motion.</span></h3></div><p>Project cards are ready for real GitHub repositories and live demos to be added later.</p></div>
+  <div class="projects">
+    <article class="card project tilt reveal"><div class="project-visual"><div class="project-symbol">◉</div></div><div class="project-body"><h4>Interactive Robot Face</h4><p>Computer-vision concept combining animated facial expressions with interactive hand gestures.</p><div class="chips"><span class="chip">PYTHON</span><span class="chip">OPENCV</span><span class="chip">MEDIAPIPE</span></div><div class="actions"><a class="btn" href="#contact">PROJECT INFO</a></div></div></article>
+    <article class="card project tilt reveal"><div class="project-visual"><div class="project-symbol">✦</div></div><div class="project-body"><h4>Hand Gesture Drawing</h4><p>An interactive drawing concept controlled through hand tracking, focused on real-time computer vision.</p><div class="chips"><span class="chip">PYTHON</span><span class="chip">OPENCV</span><span class="chip">MEDIAPIPE</span></div><div class="actions"><a class="btn" href="#contact">PROJECT INFO</a></div></div></article>
+    <article class="card project tilt reveal"><div class="project-visual"><div class="project-symbol">☼</div></div><div class="project-body"><h4>Solar-Powered Mobile Charger</h4><p>Academic renewable-energy project exploring solar power for mobile charging.</p><div class="chips"><span class="chip">ACADEMIC</span><span class="chip">RENEWABLE ENERGY</span></div><div class="actions"><a class="btn" href="#contact">PROJECT INFO</a></div></div></article>
+    <article class="card project tilt reveal"><div class="project-visual"><div class="project-symbol">⌘</div></div><div class="project-body"><h4>3D Personal Portfolio</h4><p>This single-file interactive portfolio, designed as a digital identity rather than a conventional resume.</p><div class="chips"><span class="chip">HTML</span><span class="chip">CSS</span><span class="chip">JAVASCRIPT</span></div><div class="actions"><a class="btn primary" href="#home">LIVE EXPERIENCE ↗</a></div></div></article>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="section-head reveal"><div><div class="kicker">04 / JOURNEY</div><h3>Experience & <span class="gradient">practical work.</span></h3></div><p>No fictional companies or job history are included. Add verified experience as it grows.</p></div>
+  <div class="timeline">
+    <div class="event reveal"><span class="dot"></span><div class="card event-card"><small>PRACTICAL LEARNING</small><h4>Projects & Development</h4><p>Hands-on exploration of Python, OpenCV, MediaPipe, web technologies and interactive interfaces through personal and academic projects.</p></div></div>
+    <div class="event reveal"><span class="dot"></span><div class="card event-card"><small>INDUSTRIAL TRAINING</small><h4>Substation / Section Office Training</h4><p>Industrial training and practical exposure. Add specific verified responsibilities, dates and organization details here when ready.</p></div></div>
+  </div>
+</section>
+
+<section id="game">
+  <div class="section-head reveal"><div><div class="kicker">05 / GAME LAB</div><h3>Enter the <span class="gradient">playground.</span></h3></div><p>A lightweight browser mini-game demonstrates interaction design without requiring a backend.</p></div>
+  <div class="card game reveal"><div class="game-ui"><div class="hud"><span>IV // TRAINING SIMULATION</span><span class="score">SCORE: <b id="score">0</b></span></div><div class="arena"><button class="target" id="target" aria-label="Hit target">+</button></div><div class="hud"><span>CLICK THE CORE</span><span id="status">READY</span></div></div></div>
+</section>
+
+<section id="education">
+  <div class="section-head reveal"><div><div class="kicker">06 / EDUCATION</div><h3>Learning <span class="gradient">timeline.</span></h3></div><p>Only education information visible in the provided resume is shown.</p></div>
+  <div class="timeline"><div class="event reveal"><span class="dot"></span><div class="card event-card"><small>06 / 2020</small><h4>Z P H School</h4><p>Vijayawada, India</p></div></div></div>
+</section>
+
+<section id="contact">
+  <div class="section-head reveal"><div><div class="kicker">07 / CONNECT</div><h3>Let's build something <span class="gradient">interesting.</span></h3></div><p>For actual message delivery on GitHub Pages, connect the form to a service such as Formspree or your own backend later.</p></div>
+  <div class="contact-grid">
+    <div class="card contact-card reveal"><h4>Contact coordinates</h4><div class="contact-list">
+      <div class="contact-item"><b>EMAIL</b>induvarikuti4526@gmail.com</div>
+      <div class="contact-item"><b>PHONE</b>+91 9515027705</div>
+      <div class="contact-item"><b>LOCATION</b>Vijayawada, India</div>
+      <div class="contact-item"><b>LINKEDIN</b><a href="https://www.linkedin.com/in/indu-varikuti-a93492433/" target="_blank" rel="noopener">linkedin.com/in/indu-varikuti-a93492433 ↗</a></div>
+    </div></div>
+    <div class="card contact-card reveal"><form id="contactForm"><input required placeholder="Your name" aria-label="Your name"><input required type="email" placeholder="Your email" aria-label="Your email"><textarea required placeholder="Your message" aria-label="Your message"></textarea><button class="btn primary" type="submit">SEND MESSAGE →</button><small id="formMsg" style="color:var(--muted)">Demo form — connect a form service for real delivery.</small></form></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="footer-inner"><span>© 2026 INDU VARIKUTI</span><span>CREATIVE DEVELOPER / FULL STACK / GAME DEV</span></div></footer>
+
+<script>
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('loader').classList.add('hide'),700));
+
+const menu=document.getElementById('menu'), nav=document.getElementById('navLinks');
+menu.addEventListener('click',()=>nav.classList.toggle('open'));
+document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));
+
+const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+const sections=[...document.querySelectorAll('main section')], links=[...document.querySelectorAll('.nav-links a')];
+const activeObs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-35% 0px -55% 0px'});
+sections.forEach(s=>activeObs.observe(s));
+
+if(!reduced){
+  const core=document.getElementById('core'), scene=document.getElementById('scene');
+  scene.addEventListener('pointermove',e=>{const r=scene.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;core.style.transform=`rotateX(${-y*18}deg) rotateY(${x*22}deg)`});
+  scene.addEventListener('pointerleave',()=>core.style.transform='');
+  document.querySelectorAll('.tilt').forEach(card=>card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.transform=`perspective(700px) rotateX(${-y*5}deg) rotateY(${x*7}deg) translateY(-3px)`}));
+  document.querySelectorAll('.tilt').forEach(card=>card.addEventListener('pointerleave',()=>card.style.transform=''));
+}
+const cursor=document.getElementById('cursor');
+if(!matchMedia('(pointer: coarse)').matches){addEventListener('pointermove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px'})}
+
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+let W,H,pts=[];
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;pts=Array.from({length:Math.min(90,Math.floor(W/16))},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.5+.3}))}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(114,246,211,.65)';for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}if(!reduced)requestAnimationFrame(draw)}
+resize();addEventListener('resize',resize);draw();
+
+const target=document.getElementById('target'),scoreEl=document.getElementById('score'),status=document.getElementById('status');let score=0;
+target.addEventListener('click',()=>{score++;scoreEl.textContent=score;target.classList.add('hit');status.textContent='NICE HIT';setTimeout(()=>target.classList.remove('hit'),160);if(score%5===0)status.textContent='LEVEL UP'});
+document.getElementById('contactForm').addEventListener('submit',e=>{e.preventDefault();document.getElementById('formMsg').textContent='Thanks! This demo form is ready to be connected to a form service.'});
+</script>
+</body>
+</html>
